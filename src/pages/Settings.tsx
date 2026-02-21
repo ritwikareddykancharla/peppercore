@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, useUser } from '@clerk/clerk-react'
-import { ArrowLeft, CreditCard, Settings as SettingsIcon, Shield } from 'lucide-react'
-import { AppNavbar } from '@/components/layout/app-navbar'
+import { ArrowLeft, CreditCard, Settings as SettingsIcon, Shield, User, Bell, Mail } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface UserData {
   id: string
@@ -20,12 +22,12 @@ export default function Settings() {
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
     fetch('/api/me')
       .then(res => res.json())
       .then(data => setUserData(data.user))
       .catch(console.error)
-  })
+  }, [])
 
   const handleManageBilling = async () => {
     setLoading(true)
@@ -45,109 +47,162 @@ export default function Settings() {
   }
 
   if (!isLoaded) {
-    return <div className="min-h-screen bg-bg flex items-center justify-center">Loading...</div>
+    return <div className="flex items-center justify-center min-h-[400px]">Loading...</div>
   }
 
   return (
-    <div className="min-h-screen bg-bg">
-      <AppNavbar subtitle="Settings" />
-
-      <main className="mx-auto max-w-3xl px-6 py-12">
+    <div className="space-y-8">
+      <div className="flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-muted hover:text-fg mb-8 transition-colors"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="font-body text-sm">Back</span>
+          <span className="text-sm">Back</span>
         </button>
+      </div>
 
-        <div className="space-y-8">
-          <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10">
-                <SettingsIcon className="h-5 w-5 text-accent" />
+      <div>
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        <p className="text-muted-foreground">Manage your account and preferences</p>
+      </div>
+
+      <div className="grid gap-6 max-w-3xl">
+        <Card className="border-border bg-card">
+          <CardHeader className="border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <CardTitle className="text-base font-semibold">Account</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</label>
+                <p className="mt-1 font-medium">{user?.fullName || 'Not set'}</p>
               </div>
               <div>
-                <h2 className="font-display text-lg">Account</h2>
-                <p className="text-xs text-muted">Your account details</p>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</label>
+                <p className="mt-1 font-medium">{user?.primaryEmailAddress?.emailAddress || userData?.email}</p>
               </div>
             </div>
-            
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-medium uppercase tracking-wide text-muted">Name</label>
-                <p className="font-body mt-1">{user?.fullName || 'Not set'}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium uppercase tracking-wide text-muted">Email</label>
-                <p className="font-body mt-1">{user?.primaryEmailAddress?.emailAddress || userData?.email}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium uppercase tracking-wide text-muted">Plan</label>
-                <p className="font-body mt-1 capitalize">{userData?.plan || 'free'}</p>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Plan</label>
+                <p className="mt-1">
+                  <span className="tag tag-primary capitalize">{userData?.plan || 'free'}</span>
+                </p>
               </div>
               {userData?.stripeCurrentPeriodEnd && (
                 <div>
-                  <label className="text-xs font-medium uppercase tracking-wide text-muted">Next billing date</label>
-                  <p className="font-body mt-1">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Next billing</label>
+                  <p className="mt-1 font-medium">
                     {new Date(userData.stripeCurrentPeriodEnd).toLocaleDateString()}
                   </p>
                 </div>
               )}
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10">
-                <CreditCard className="h-5 w-5 text-accent" />
+        <Card className="border-border bg-card">
+          <CardHeader className="border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                <CreditCard className="h-4 w-4 text-primary" />
               </div>
-              <div>
-                <h2 className="font-display text-lg">Billing</h2>
-                <p className="text-xs text-muted">Manage your subscription</p>
-              </div>
+              <CardTitle className="text-base font-semibold">Billing</CardTitle>
             </div>
-            
-            <div className="space-y-4">
-              {userData?.plan === 'pro' ? (
-                <button
+          </CardHeader>
+          <CardContent className="p-6">
+            {userData?.plan === 'pro' ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Pro Plan</p>
+                  <p className="text-sm text-muted-foreground">$99/month</p>
+                </div>
+                <Button
                   onClick={handleManageBilling}
                   disabled={loading}
-                  className="btn-primary w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/20 transition-all hover:bg-accent/90 disabled:opacity-50"
+                  className="btn-primary"
                 >
                   {loading ? 'Loading...' : 'Manage Billing'}
-                </button>
-              ) : (
-                <Link
-                  to="/pricing"
-                  className="btn-primary block text-center w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/20 transition-all hover:bg-accent/90"
-                >
-                  Upgrade to Pro
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Free Plan</p>
+                  <p className="text-sm text-muted-foreground">Upgrade for more features</p>
+                </div>
+                <Link to="/pricing">
+                  <Button className="btn-primary">Upgrade to Pro</Button>
                 </Link>
-              )}
-            </div>
-          </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">
-                <Shield className="h-5 w-5 text-red-500" />
+        <Card className="border-border bg-card">
+          <CardHeader className="border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                <Bell className="h-4 w-4 text-primary" />
               </div>
-              <div>
-                <h2 className="font-display text-lg">Danger Zone</h2>
-                <p className="text-xs text-muted">Irreversible actions</p>
-              </div>
+              <CardTitle className="text-base font-semibold">Notifications</CardTitle>
             </div>
-            
-            <button
-              onClick={() => signOut()}
-              className="rounded-xl border-2 border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:border-red-300 hover:bg-red-50"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </main>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Email Notifications</p>
+                <p className="text-sm text-muted-foreground">Receive updates about your operations</p>
+              </div>
+              <button className="relative h-6 w-10 rounded-full bg-primary transition-colors">
+                <span className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform translate-x-0" />
+              </button>
+            </div>
+            <div className="divider-h" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Weekly Reports</p>
+                <p className="text-sm text-muted-foreground">Get a summary of your automation activity</p>
+              </div>
+              <button className="relative h-6 w-10 rounded-full bg-muted transition-colors">
+                <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform" />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border bg-card border-destructive/20">
+          <CardHeader className="border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10">
+                <Shield className="h-4 w-4 text-destructive" />
+              </div>
+              <CardTitle className="text-base font-semibold text-destructive">Danger Zone</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Sign Out</p>
+                <p className="text-sm text-muted-foreground">Sign out of your account</p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => signOut()}
+                className="border-destructive/20 text-destructive hover:bg-destructive/10"
+              >
+                Sign Out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
