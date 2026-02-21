@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth, useUser, UserButton } from '@clerk/clerk-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import { ArrowLeft, CreditCard, Settings as SettingsIcon, Shield } from 'lucide-react'
+import { AppNavbar } from '@/components/layout/app-navbar'
 
 interface UserData {
   id: string
@@ -49,20 +50,7 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <nav className="sticky top-0 z-40 border-b border-border/50 bg-charcoal/95 backdrop-blur-md text-white shadow-lg">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/80 text-xl font-semibold shadow-lg shadow-accent/20">P</div>
-            <div>
-              <h1 className="font-display text-xl">Pepper Ops</h1>
-              <p className="text-xs text-white/50">Settings</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <UserButton afterSignOutUrl="/" />
-          </div>
-        </div>
-      </nav>
+      <AppNavbar subtitle="Settings" />
 
       <main className="mx-auto max-w-3xl px-6 py-12">
         <button
