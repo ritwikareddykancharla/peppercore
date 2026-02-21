@@ -1,24 +1,34 @@
-import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
-export function StatusBadge({ status }: { status: string }) {
-  switch (status) {
-    case 'responded':
-    case 'paid':
-      return (
-        <Badge className="border-green-200 bg-green-100 text-green-800 hover:bg-green-100">
-          {status}
-        </Badge>
-      )
-    case 'escalated':
-      return <Badge variant="destructive">{status}</Badge>
-    case 'processing':
-    case 'reminder_sent':
-      return (
-        <Badge className="border-yellow-200 bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-          {status.replace('_', ' ')}
-        </Badge>
-      )
-    default:
-      return <Badge variant="outline">{status}</Badge>
+interface StatusBadgeProps {
+  status: string
+  className?: string
+}
+
+export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const styles: Record<string, string> = {
+    responded: 'tag tag-success',
+    paid: 'tag tag-success',
+    escalated: 'tag tag-destructive',
+    processing: 'tag tag-warning',
+    reminder_sent: 'tag tag-warning',
+    pending: 'tag bg-muted text-muted-foreground',
+    incoming: 'tag bg-muted text-muted-foreground',
   }
+
+  const labels: Record<string, string> = {
+    reminder_sent: 'Reminder sent',
+    processing: 'Processing',
+    responded: 'Responded',
+    escalated: 'Escalated',
+    pending: 'Pending',
+    paid: 'Paid',
+    incoming: 'Incoming',
+  }
+
+  return (
+    <span className={cn(styles[status] || 'tag bg-muted text-muted-foreground', className)}>
+      {labels[status] || status}
+    </span>
+  )
 }

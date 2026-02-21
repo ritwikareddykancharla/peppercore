@@ -26,25 +26,27 @@ export function AddPolicyDialog({
 }: AddPolicyDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px] bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Add New Policy</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg font-semibold">Add New Policy</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Define a rule for how Pepper handles your operations automatically.
           </DialogDescription>
         </DialogHeader>
-        <Textarea
-          value={value}
-          onChange={(e) => onValueChange(e.target.value)}
-          placeholder="e.g., Always respond to new leads within 15 minutes."
-          rows={3}
-          className="resize-none"
-        />
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="py-4">
+          <Textarea
+            value={value}
+            onChange={(e) => onValueChange(e.target.value)}
+            placeholder="e.g., Always respond to new leads within 15 minutes."
+            rows={3}
+            className="resize-none input-field"
+          />
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="btn-secondary">
             Cancel
           </Button>
-          <Button onClick={onSubmit} disabled={!value.trim()}>
+          <Button onClick={onSubmit} disabled={!value.trim()} className="btn-primary">
             Add Policy
           </Button>
         </DialogFooter>
