@@ -173,7 +173,7 @@
   }
   
   .number-display {
-    @apply font-display text-4xl font-semibold tracking-tight;
+    @apply text-4xl font-semibold tracking-tight;
   }
   
   .sidebar-link {
