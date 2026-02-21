@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, useUser } from '@clerk/clerk-react'
-import { ArrowLeft, CreditCard, Settings as SettingsIcon, Shield, User, Bell, Mail } from 'lucide-react'
+import { ArrowLeft, CreditCard, Shield, User, Bell } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 interface UserData {
   id: string
