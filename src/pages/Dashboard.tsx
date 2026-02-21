@@ -16,6 +16,31 @@ import {
   X,
   Zap,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Progress } from '@/components/ui/progress'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface Email {
   id: string
@@ -66,6 +91,29 @@ interface Stats {
 }
 
 type EmailFilter = 'all' | 'processing' | 'escalated' | 'responded'
+
+function StatusBadge({ status }: { status: string }) {
+  switch (status) {
+    case 'responded':
+    case 'paid':
+      return (
+        <Badge className="border-green-200 bg-green-100 text-green-800 hover:bg-green-100">
+          {status}
+        </Badge>
+      )
+    case 'escalated':
+      return <Badge variant="destructive">{status}</Badge>
+    case 'processing':
+    case 'reminder_sent':
+      return (
+        <Badge className="border-yellow-200 bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+          {status.replace('_', ' ')}
+        </Badge>
+      )
+    default:
+      return <Badge variant="outline">{status}</Badge>
+  }
+}
 
 export default function Dashboard() {
   const [emails, setEmails] = useState<Email[]>([])
@@ -252,460 +300,519 @@ export default function Dashboard() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'responded':
-      case 'paid':
-        return 'bg-green-100 text-green-800'
-      case 'escalated':
-        return 'bg-red-100 text-red-800'
-      case 'processing':
-      case 'reminder_sent':
-        return 'bg-yellow-100 text-yellow-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
   return (
     <div className="min-h-screen bg-bg">
+      {/* Navigation */}
       <nav className="sticky top-0 z-40 border-b border-border/50 bg-charcoal/95 backdrop-blur-md text-white shadow-lg">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/80 text-xl font-semibold shadow-lg shadow-accent/20">P</div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/80 text-xl font-semibold shadow-lg shadow-accent/20">
+              P
+            </div>
             <div>
               <h1 className="font-display text-xl">Pepper Ops</h1>
               <p className="text-xs text-white/50">Revenue and operations control center</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/settings" className="rounded-xl px-4 py-2 text-sm font-medium transition-colors hover:bg-white/10">
-              <Settings className="w-5 h-5" />
-            </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild className="text-white hover:bg-white/10 hover:text-white">
+              <Link to="/settings">
+                <Settings className="h-5 w-5" />
+              </Link>
+            </Button>
             <UserButton afterSignOutUrl="/" />
           </div>
         </div>
       </nav>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
+        {/* Error Alert */}
         {requestError && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-white px-5 py-4 text-sm text-red-700 shadow-sm">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              {requestError}
-            </div>
-          </div>
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{requestError}</AlertDescription>
+          </Alert>
         )}
 
-        <div className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-white p-6 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5">
-            <div className="absolute right-3 top-3 opacity-10 transition-opacity group-hover:opacity-20">
-              <Mail className="h-16 w-16 text-accent" />
-            </div>
-            <div className="relative z-10">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10">
-                <Mail className="h-5 w-5 text-accent" />
+        {/* Stats Cards */}
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Card className="group overflow-hidden border-border bg-gradient-to-br from-card to-white transition-all duration-300 hover:shadow-lg hover:shadow-accent/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Pending Emails</p>
+                  <p className="font-display text-4xl mt-1">{stats?.emailsPending ?? 0}</p>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
+                  <Mail className="h-5 w-5 text-primary" />
+                </div>
               </div>
-              <p className="font-display text-4xl">{stats?.emailsPending || 0}</p>
-              <p className="mt-1 text-sm text-muted">Pending Emails</p>
-            </div>
-          </div>
-          <div className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-white p-6 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/5">
-            <div className="absolute right-3 top-3 opacity-10 transition-opacity group-hover:opacity-20">
-              <CheckCircle className="h-16 w-16 text-green-500" />
-            </div>
-            <div className="relative z-10">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10">
-                <CheckCircle className="h-5 w-5 text-green-500" />
+            </CardContent>
+          </Card>
+
+          <Card className="group overflow-hidden border-border bg-gradient-to-br from-card to-white transition-all duration-300 hover:shadow-lg hover:shadow-green-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Responded</p>
+                  <p className="font-display text-4xl mt-1 text-green-600">{stats?.emailsResponded ?? 0}</p>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-500/10 transition-colors group-hover:bg-green-500/20">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                </div>
               </div>
-              <p className="font-display text-4xl text-green-600">{stats?.emailsResponded || 0}</p>
-              <p className="mt-1 text-sm text-muted">Responded</p>
-            </div>
-          </div>
-          <div className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-white p-6 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/5">
-            <div className="absolute right-3 top-3 opacity-10 transition-opacity group-hover:opacity-20">
-              <AlertTriangle className="h-16 w-16 text-yellow-500" />
-            </div>
-            <div className="relative z-10">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500/10">
-                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            </CardContent>
+          </Card>
+
+          <Card className="group overflow-hidden border-border bg-gradient-to-br from-card to-white transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Overdue Invoices</p>
+                  <p className="font-display text-4xl mt-1 text-yellow-600">{stats?.invoicesOverdue ?? 0}</p>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-yellow-500/10 transition-colors group-hover:bg-yellow-500/20">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                </div>
               </div>
-              <p className="font-display text-4xl text-yellow-600">{stats?.invoicesOverdue || 0}</p>
-              <p className="mt-1 text-sm text-muted">Overdue Invoices</p>
-            </div>
-          </div>
-          <div className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-white p-6 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5">
-            <div className="absolute right-3 top-3 opacity-10 transition-opacity group-hover:opacity-20">
-              <DollarSign className="h-16 w-16 text-accent" />
-            </div>
-            <div className="relative z-10">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10">
-                <DollarSign className="h-5 w-5 text-accent" />
+            </CardContent>
+          </Card>
+
+          <Card className="group overflow-hidden border-border bg-gradient-to-br from-card to-white transition-all duration-300 hover:shadow-lg hover:shadow-accent/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Outstanding</p>
+                  <p className="font-display text-4xl mt-1">${stats?.totalOutstanding?.toLocaleString() ?? 0}</p>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
+                  <DollarSign className="h-5 w-5 text-primary" />
+                </div>
               </div>
-              <p className="font-display text-4xl">${stats?.totalOutstanding?.toLocaleString() || 0}</p>
-              <p className="mt-1 text-sm text-muted">Outstanding</p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
+        {/* Main Grid */}
         <div className="grid gap-6 lg:grid-cols-12">
+          {/* Left Column - Inbox + Add Email */}
           <section className="space-y-6 lg:col-span-4">
-            <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                    <Mail className="h-4 w-4 text-accent" />
-                  </div>
-                  <h2 className="font-display text-lg">Inbox</h2>
-                </div>
-                <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">{filteredEmails.length}</span>
-              </div>
-
-              <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-white/80 px-4 py-2.5 shadow-sm transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/10">
-                <Search className="h-4 w-4 text-muted" />
-                <input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search sender, subject, intent"
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-muted/60"
-                />
-              </div>
-
-              <select
-                value={emailFilter}
-                onChange={(event) => setEmailFilter(event.target.value as EmailFilter)}
-                className="mb-4 w-full rounded-xl border border-border bg-white/80 px-4 py-2.5 text-sm shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
-              >
-                <option value="all">All statuses</option>
-                <option value="processing">Needs response</option>
-                <option value="escalated">Escalated</option>
-                <option value="responded">Responded</option>
-              </select>
-
-              <div className="max-h-[500px] space-y-2 overflow-y-auto pr-1">
-                {filteredEmails.map((email) => (
-                  <button
-                    key={email.id}
-                    className={`w-full rounded-xl border p-4 text-left transition-all duration-200 ${
-                      selectedEmailId === email.id
-                        ? 'border-accent bg-accent/5 shadow-md shadow-accent/5'
-                        : 'border-border bg-white hover:border-accent/30 hover:shadow-sm'
-                    }`}
-                    onClick={() => setSelectedEmailId(email.id)}
-                  >
-                    <div className="mb-2 flex items-start justify-between gap-2">
-                      <p className="truncate text-sm font-semibold">{email.sender}</p>
-                      <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${getStatusColor(email.status)}`}>
-                        {email.status}
-                      </span>
+            {/* Inbox */}
+            <Card className="border-border bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Mail className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="truncate text-sm text-fg/80">{email.subject}</p>
-                    {email.classification && (
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <Sparkles className="h-3 w-3 text-accent" />
-                        <p className="text-xs text-accent">{email.classification}</p>
+                    <CardTitle className="font-display text-lg">Inbox</CardTitle>
+                  </div>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/10">
+                    {filteredEmails.length}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search sender, subject, intent"
+                    className="pl-9"
+                  />
+                </div>
+
+                <Select value={emailFilter} onValueChange={(v) => setEmailFilter(v as EmailFilter)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="processing">Needs response</SelectItem>
+                    <SelectItem value="escalated">Escalated</SelectItem>
+                    <SelectItem value="responded">Responded</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <ScrollArea className="h-[460px] pr-1">
+                  <div className="space-y-2">
+                    {filteredEmails.map((email) => (
+                      <button
+                        key={email.id}
+                        className={cn(
+                          'w-full rounded-lg border p-3.5 text-left transition-all duration-200',
+                          selectedEmailId === email.id
+                            ? 'border-primary bg-primary/5 shadow-md shadow-primary/5'
+                            : 'border-border bg-white hover:border-primary/30 hover:shadow-sm'
+                        )}
+                        onClick={() => setSelectedEmailId(email.id)}
+                      >
+                        <div className="mb-1.5 flex items-start justify-between gap-2">
+                          <p className="truncate text-sm font-semibold">{email.sender}</p>
+                          <StatusBadge status={email.status} />
+                        </div>
+                        <p className="truncate text-sm text-muted-foreground">{email.subject}</p>
+                        {email.classification && (
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <Sparkles className="h-3 w-3 text-primary" />
+                            <p className="text-xs text-primary">{email.classification}</p>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                    {!loading && filteredEmails.length === 0 && (
+                      <div className="rounded-lg border border-dashed border-border bg-white/50 p-6 text-center">
+                        <p className="text-sm text-muted-foreground">No emails match current filters.</p>
                       </div>
                     )}
-                  </button>
-                ))}
-                {!loading && filteredEmails.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-border bg-white/50 p-6 text-center">
-                    <p className="text-sm text-muted">No emails match current filters.</p>
                   </div>
-                )}
-              </div>
-            </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
 
-            <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-white/50 overflow-hidden shadow-sm">
-              <div className="border-b border-border/50 bg-white/30 px-5 py-4">
+            {/* Add Incoming Email */}
+            <Card className="border-border bg-gradient-to-br from-card to-white/50 overflow-hidden">
+              <CardHeader className="border-b border-border/50 bg-white/30">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                    <Zap className="h-4 w-4 text-accent" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Zap className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-display text-lg">Add Incoming Email</h2>
-                    <p className="text-xs text-muted">Simulate new inbound traffic</p>
+                    <CardTitle className="font-display text-lg">Add Incoming Email</CardTitle>
+                    <CardDescription>Simulate new inbound traffic</CardDescription>
                   </div>
                 </div>
-              </div>
-              <div className="space-y-3 p-5">
-                <input
+              </CardHeader>
+              <CardContent className="space-y-3 pt-5">
+                <Input
                   value={newEmailSender}
                   onChange={(e) => setNewEmailSender(e.target.value)}
                   placeholder="Sender name"
-                  className="w-full rounded-xl border border-border bg-white/80 px-4 py-2.5 text-sm shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
                 />
-                <input
+                <Input
                   value={newEmailSenderEmail}
                   onChange={(e) => setNewEmailSenderEmail(e.target.value)}
                   placeholder="sender@company.com"
-                  className="w-full rounded-xl border border-border bg-white/80 px-4 py-2.5 text-sm shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
                 />
-                <input
+                <Input
                   value={newEmailSubject}
                   onChange={(e) => setNewEmailSubject(e.target.value)}
                   placeholder="Email subject"
-                  className="w-full rounded-xl border border-border bg-white/80 px-4 py-2.5 text-sm shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
                 />
-                <textarea
+                <Textarea
                   value={newEmailBody}
                   onChange={(e) => setNewEmailBody(e.target.value)}
                   placeholder="Email body"
                   rows={4}
-                  className="w-full resize-none rounded-xl border border-border bg-white/80 px-4 py-3 text-sm shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
+                  className="resize-none"
                 />
-                <button
-                  onClick={submitNewEmail}
-                  className="btn-primary w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/20 transition-all hover:bg-accent/90 hover:shadow-xl hover:shadow-accent/30"
-                >
+                <Button onClick={submitNewEmail} className="w-full shadow-lg shadow-primary/20">
                   Submit Incoming Email
-                </button>
-              </div>
-            </div>
+                </Button>
+              </CardContent>
+            </Card>
           </section>
 
+          {/* Center Column - Triage + Invoices */}
           <section className="lg:col-span-5">
-            <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm overflow-hidden">
-              <div className="border-b border-border/50 bg-gradient-to-r from-accent/5 to-transparent px-6 py-5">
+            {/* Triage Workspace */}
+            <Card className="border-border bg-card/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10">
-                    <Sparkles className="h-5 w-5 text-accent" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <Sparkles className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-display text-xl">Triage Workspace</h2>
-                    <p className="text-xs text-muted">Review intent, edit response, and resolve</p>
+                    <CardTitle className="font-display text-xl">Triage Workspace</CardTitle>
+                    <CardDescription>Review intent, edit response, and resolve</CardDescription>
                   </div>
                 </div>
-              </div>
-
-              {selectedEmail ? (
-                <div className="space-y-5 p-6">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-semibold text-accent">
-                      {selectedEmail.sender.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{selectedEmail.sender}</p>
-                      <p className="truncate text-sm text-muted">{selectedEmail.senderEmail}</p>
-                    </div>
-                    <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium capitalize ${getStatusColor(selectedEmail.status)}`}>
-                      {selectedEmail.status}
-                    </span>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-white/80 p-4">
-                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Subject</p>
-                    <p className="font-medium">{selectedEmail.subject}</p>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-white/80 p-4 text-sm text-fg/90 leading-relaxed">
-                    {selectedEmail.body}
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div className="rounded-xl border border-accent/20 bg-gradient-to-br from-accent/5 to-white p-4">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-accent" />
-                        <p className="text-xs font-medium uppercase tracking-wide text-muted">Classification</p>
+              </CardHeader>
+              <CardContent className="p-6">
+                {selectedEmail ? (
+                  <div className="space-y-5">
+                    {/* Sender info */}
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                          {selectedEmail.sender.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">{selectedEmail.sender}</p>
+                        <p className="truncate text-sm text-muted-foreground">{selectedEmail.senderEmail}</p>
                       </div>
-                      <p className="mt-1 text-sm font-semibold text-accent">{selectedEmail.classification || 'Unclassified'}</p>
+                      <StatusBadge status={selectedEmail.status} />
                     </div>
-                    <div className="rounded-xl border border-border bg-white p-4">
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted">Confidence</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-border">
-                          <div 
-                            className="h-full rounded-full bg-accent transition-all" 
-                            style={{ width: `${Math.round((selectedEmail.confidence || 0) * 100)}%` }}
-                          />
+
+                    {/* Subject */}
+                    <div className="rounded-lg border border-border bg-white/80 p-4">
+                      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Subject</p>
+                      <p className="font-medium">{selectedEmail.subject}</p>
+                    </div>
+
+                    {/* Body */}
+                    <div className="rounded-lg border border-border bg-white/80 p-4 text-sm leading-relaxed">
+                      {selectedEmail.body}
+                    </div>
+
+                    {/* Classification + Confidence */}
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Sparkles className="h-3.5 w-3.5 text-primary" />
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Classification</p>
                         </div>
-                        <span className="text-sm font-semibold">{Math.round((selectedEmail.confidence || 0) * 100)}%</span>
+                        <p className="text-sm font-semibold text-primary">{selectedEmail.classification || 'Unclassified'}</p>
+                      </div>
+                      <div className="rounded-lg border border-border bg-white p-4">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Confidence</p>
+                        <div className="flex items-center gap-3">
+                          <Progress value={Math.round((selectedEmail.confidence || 0) * 100)} className="h-2" />
+                          <span className="text-sm font-semibold shrink-0">
+                            {Math.round((selectedEmail.confidence || 0) * 100)}%
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted">Response Draft</label>
-                    <textarea
-                      value={replyDraft}
-                      onChange={(event) => setReplyDraft(event.target.value)}
-                      rows={5}
-                      className="w-full resize-none rounded-xl border border-border bg-white/80 px-4 py-3 text-sm shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
-                    />
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => respondToEmail(selectedEmail.id, replyDraft)}
-                      disabled={selectedEmail.status === 'responded' || !replyDraft.trim()}
-                      className="btn-primary flex-1 rounded-xl bg-accent py-3.5 font-semibold text-white shadow-lg shadow-accent/20 transition-all hover:bg-accent/90 hover:shadow-xl hover:shadow-accent/30 disabled:cursor-not-allowed disabled:bg-accent/40 disabled:shadow-none"
-                    >
-                      {selectedEmail.status === 'responded' ? 'Already Responded' : 'Send Response'}
-                    </button>
-                    <button
-                      onClick={() => escalateEmail(selectedEmail.id)}
-                      disabled={selectedEmail.status === 'escalated' || selectedEmail.status === 'responded'}
-                      className="flex-1 rounded-xl border-2 border-red-200 py-3.5 font-semibold text-red-600 transition-all hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Escalate
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-12 text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10">
-                    <Mail className="h-8 w-8 text-accent/40" />
-                  </div>
-                  <p className="text-muted">Select an email from the inbox to begin.</p>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between border-b border-border/50 bg-gradient-to-r from-accent/5 to-transparent px-6 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                    <FileText className="h-4 w-4 text-accent" />
-                  </div>
-                  <h2 className="font-display text-lg">Invoice Operations</h2>
-                </div>
-                <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">{invoices.length} total</span>
-              </div>
-              <div className="divide-y divide-border/50">
-                {invoices.slice(0, 5).map((invoice) => (
-                  <div key={invoice.id} className="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-white/50">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{invoice.customer}</p>
-                      <p className="text-sm text-muted">{invoice.id} - <span className="font-medium text-fg">${invoice.amount.toLocaleString()}</span></p>
+                    {/* Response Draft */}
+                    <div>
+                      <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        Response Draft
+                      </label>
+                      <Textarea
+                        value={replyDraft}
+                        onChange={(e) => setReplyDraft(e.target.value)}
+                        rows={5}
+                        className="resize-none"
+                      />
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {invoice.daysOverdue > 0 && <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">{invoice.daysOverdue}d overdue</span>}
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${getStatusColor(invoice.status)}`}>
-                        {invoice.status.replace('_', ' ')}
-                      </span>
-                      {invoice.status !== 'paid' && (
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => sendReminder(invoice.id)}
-                            className="rounded-lg p-2 transition-colors hover:bg-accent/10"
-                            title="Send reminder"
-                            aria-label={`Send reminder for ${invoice.id}`}
-                          >
-                            <Bell className="h-4 w-4 text-accent" />
-                          </button>
-                          <button
-                            onClick={() => markPaid(invoice.id)}
-                            className="rounded-lg p-2 transition-colors hover:bg-green-100"
-                            title="Mark as paid"
-                            aria-label={`Mark ${invoice.id} as paid`}
-                          >
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          </button>
-                        </div>
-                      )}
+
+                    {/* Actions */}
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => respondToEmail(selectedEmail.id, replyDraft)}
+                        disabled={selectedEmail.status === 'responded' || !replyDraft.trim()}
+                        className="flex-1 shadow-lg shadow-primary/20"
+                      >
+                        {selectedEmail.status === 'responded' ? 'Already Responded' : 'Send Response'}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => escalateEmail(selectedEmail.id)}
+                        disabled={selectedEmail.status === 'escalated' || selectedEmail.status === 'responded'}
+                        className="flex-1"
+                      >
+                        Escalate
+                      </Button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-6 lg:col-span-3">
-            <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between border-b border-border/50 bg-gradient-to-r from-accent/5 to-transparent px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                    <Settings className="h-4 w-4 text-accent" />
-                  </div>
-                  <h2 className="font-display text-lg">Policies</h2>
-                </div>
-                <button
-                  onClick={() => setShowPolicyModal(true)}
-                  className="rounded-lg bg-accent/10 p-2 transition-colors hover:bg-accent/20"
-                  aria-label="Open add policy modal"
-                >
-                  <Plus className="h-4 w-4 text-accent" />
-                </button>
-              </div>
-              <div className="space-y-2 p-4">
-                {policies.map((policy) => (
-                  <div key={policy.id} className="group flex items-start gap-3 rounded-xl border border-border bg-white p-3 shadow-sm transition-shadow hover:shadow">
-                    <button
-                      onClick={() => togglePolicy(policy.id)}
-                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${policy.active ? 'border-accent bg-accent' : 'border-border hover:border-accent/50'}`}
-                      aria-label={`Toggle policy ${policy.rule}`}
-                    >
-                      {policy.active && <CheckCircle className="h-3 w-3 text-white" />}
-                    </button>
-                    <p className={`flex-1 text-sm leading-relaxed ${!policy.active ? 'text-muted line-through' : ''}`}>{policy.rule}</p>
-                    <button
-                      onClick={() => deletePolicy(policy.id)}
-                      className="rounded-lg p-1 opacity-0 transition-all hover:bg-red-100 group-hover:opacity-100"
-                      aria-label={`Delete policy ${policy.rule}`}
-                    >
-                      <X className="h-3 w-3 text-red-500" />
-                    </button>
-                  </div>
-                ))}
-                {policies.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted">
-                    No policies yet. Add one to get started.
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                      <Mail className="h-8 w-8 text-primary/40" />
+                    </div>
+                    <p className="text-muted-foreground">Select an email from the inbox to begin.</p>
                   </div>
                 )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm overflow-hidden">
-              <div className="border-b border-border/50 bg-gradient-to-r from-accent/5 to-transparent px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                    <Clock className="h-4 w-4 text-accent" />
+            {/* Invoice Operations */}
+            <Card className="mt-6 border-border bg-card/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <FileText className="h-4 w-4 text-primary" />
+                    </div>
+                    <CardTitle className="font-display text-lg">Invoice Operations</CardTitle>
                   </div>
-                  <h2 className="font-display text-lg">Activity Feed</h2>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/10">
+                    {invoices.length} total
+                  </Badge>
                 </div>
-              </div>
-              <div className="max-h-[320px] space-y-3 overflow-y-auto p-4">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="rounded-xl border border-border bg-white p-3 shadow-sm transition-shadow hover:shadow">
-                    <p className="font-medium text-sm">{activity.description}</p>
-                    {activity.details && <p className="mt-1 text-xs text-muted">{activity.details}</p>}
-                    <p className="mt-2 text-xs text-muted/70">{new Date(activity.timestamp).toLocaleString()}</p>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border/50">
+                  {invoices.slice(0, 5).map((invoice) => (
+                    <div key={invoice.id} className="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-white/50">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">{invoice.customer}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {invoice.id} &middot; <span className="font-medium text-fg">${invoice.amount.toLocaleString()}</span>
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {invoice.daysOverdue > 0 && (
+                          <Badge className="border-red-200 bg-red-50 text-red-600 hover:bg-red-50">
+                            {invoice.daysOverdue}d overdue
+                          </Badge>
+                        )}
+                        <StatusBadge status={invoice.status} />
+                        {invoice.status !== 'paid' && (
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                              onClick={() => sendReminder(invoice.id)}
+                              title="Send reminder"
+                              aria-label={`Send reminder for ${invoice.id}`}
+                            >
+                              <Bell className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-green-100 hover:text-green-600"
+                              onClick={() => markPaid(invoice.id)}
+                              title="Mark as paid"
+                              aria-label={`Mark ${invoice.id} as paid`}
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {invoices.length === 0 && (
+                    <div className="p-6 text-center text-sm text-muted-foreground">
+                      No invoices yet.
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Right Column - Policies + Activity */}
+          <section className="space-y-6 lg:col-span-3">
+            {/* Policies */}
+            <Card className="border-border bg-card/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Settings className="h-4 w-4 text-primary" />
+                    </div>
+                    <CardTitle className="font-display text-lg">Policies</CardTitle>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                    onClick={() => setShowPolicyModal(true)}
+                    aria-label="Open add policy modal"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  {policies.map((policy) => (
+                    <div
+                      key={policy.id}
+                      className="group flex items-start gap-3 rounded-lg border border-border bg-white p-3 shadow-sm transition-shadow hover:shadow"
+                    >
+                      <button
+                        onClick={() => togglePolicy(policy.id)}
+                        className={cn(
+                          'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors',
+                          policy.active
+                            ? 'border-primary bg-primary'
+                            : 'border-border hover:border-primary/50'
+                        )}
+                        aria-label={`Toggle policy ${policy.rule}`}
+                      >
+                        {policy.active && <CheckCircle className="h-3 w-3 text-white" />}
+                      </button>
+                      <p className={cn('flex-1 text-sm leading-relaxed', !policy.active && 'text-muted line-through')}>
+                        {policy.rule}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 transition-all hover:bg-red-100 hover:text-red-500 group-hover:opacity-100"
+                        onClick={() => deletePolicy(policy.id)}
+                        aria-label={`Delete policy ${policy.rule}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  {policies.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                      No policies yet. Add one to get started.
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Activity Feed */}
+            <Card className="border-border bg-card/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Clock className="h-4 w-4 text-primary" />
+                  </div>
+                  <CardTitle className="font-display text-lg">Activity Feed</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <ScrollArea className="h-[300px]">
+                  <div className="space-y-3 pr-3">
+                    {activities.map((activity) => (
+                      <div key={activity.id} className="rounded-lg border border-border bg-white p-3 shadow-sm transition-shadow hover:shadow">
+                        <p className="font-medium text-sm">{activity.description}</p>
+                        {activity.details && <p className="mt-1 text-xs text-muted-foreground">{activity.details}</p>}
+                        <p className="mt-2 text-xs text-muted/50">{new Date(activity.timestamp).toLocaleString()}</p>
+                      </div>
+                    ))}
+                    {activities.length === 0 && (
+                      <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                        No activity yet.
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
           </section>
         </div>
       </main>
 
-      {showPolicyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={() => setShowPolicyModal(false)}>
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="mb-4 font-display text-xl">Add New Policy</h3>
-            <textarea
-              value={newPolicy}
-              onChange={(e) => setNewPolicy(e.target.value)}
-              placeholder="e.g., Always respond to new leads within 15 minutes."
-              className="w-full resize-none rounded-xl border border-border bg-white/80 px-4 py-3 shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
-              rows={3}
-            />
-            <div className="mt-5 flex gap-3">
-              <button
-                onClick={addPolicy}
-                className="btn-primary flex-1 rounded-xl bg-accent py-3 font-semibold text-white shadow-lg shadow-accent/20 transition-all hover:bg-accent/90 hover:shadow-xl hover:shadow-accent/30"
-              >
-                Add Policy
-              </button>
-              <button
-                onClick={() => setShowPolicyModal(false)}
-                className="flex-1 rounded-xl border-2 border-border py-3 font-semibold transition-all hover:border-accent/30 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add Policy Dialog */}
+      <Dialog open={showPolicyModal} onOpenChange={setShowPolicyModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">Add New Policy</DialogTitle>
+            <DialogDescription>
+              Define a rule for how Pepper handles your operations automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={newPolicy}
+            onChange={(e) => setNewPolicy(e.target.value)}
+            placeholder="e.g., Always respond to new leads within 15 minutes."
+            rows={3}
+            className="resize-none"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPolicyModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={addPolicy} disabled={!newPolicy.trim()}>
+              Add Policy
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
